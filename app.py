@@ -150,6 +150,7 @@ TWITTER_BEARER_TOKEN        = os.environ.get("TWITTER_BEARER_TOKEN",        "")
 # News / AI
 NEWS_API_KEY      = os.environ.get("NEWS_API_KEY",      "")
 OPENROUTER_API_KEY= os.environ.get("OPENROUTER_API_KEY","")
+ORCAROUTER_API_KEY= os.environ.get("ORCAROUTER_API_KEY","")
 HIGHSIGHT_API_KEY = os.environ.get("HIGHSIGHT_API_KEY", "")
 NASA_API_KEY      = os.environ.get("NASA_API_KEY",      "")
 HF_TOKEN = ""    
@@ -786,22 +787,17 @@ def get_geo_news():
 
     return jsonify(result_data)
 
-def analyze_with_ai(context):
-    """
-    Use OpenRouter to analyze geopolitical context and sentiment.
-    """
-    if not OPENROUTER_API_KEY or "placeholder" in OPENROUTER_API_KEY:
-        return "ANALYSIS_OFFLINE: Connectivity to Neural Core interrupted (Missing API Key)."
-
+def _call_ai_gateway(api_key, endpoint, model, context):
+    """Call an OpenAI-compatible chat gateway; return the assistant text or None."""
     try:
         response = requests.post(
-            url="https://openrouter.ai/api/v1/chat/completions",
+            url=endpoint,
             headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
             },
             data=json.dumps({
-                "model": "google/gemini-2.0-flash-exp:free", # Using a free model for demonstration
+                "model": model,
                 "messages": [
                     {"role": "system", "content": "You are HayOS Geopolitical AI. Analyze the provided news context and provide a brief, high-tech assessment of the situation in 2-3 sentences. Use CYBERPUNK/OSINT tone."},
                     {"role": "user", "content": context}
@@ -812,9 +808,36 @@ def analyze_with_ai(context):
         if response.status_code == 200:
             return response.json()['choices'][0]['message']['content']
     except Exception as e:
-        print(f"OpenRouter Error: {e}")
-    
-    return "ANALYSIS_OFFLINE: Connectivity to Neural Core interrupted."
+        print(f"AI Gateway Error: {e}")
+    return None
+
+def analyze_with_ai(context):
+    """
+    Use OrcaRouter (preferred when configured) or OpenRouter to analyze
+    geopolitical context and sentiment.
+    """
+    # OrcaRouter — OpenAI-compatible gateway with gateway-level security.
+    if ORCAROUTER_API_KEY and "placeholder" not in ORCAROUTER_API_KEY:
+        text = _call_ai_gateway(
+            ORCAROUTER_API_KEY,
+            "https://api.orcarouter.ai/v1/chat/completions",
+            "google/gemini-3.1-flash-lite",
+            context,
+        )
+        if text:
+            return text
+        return "ANALYSIS_OFFLINE: Connectivity to Neural Core interrupted."
+
+    if not OPENROUTER_API_KEY or "placeholder" in OPENROUTER_API_KEY:
+        return "ANALYSIS_OFFLINE: Connectivity to Neural Core interrupted (Missing API Key)."
+
+    text = _call_ai_gateway(
+        OPENROUTER_API_KEY,
+        "https://openrouter.ai/api/v1/chat/completions",
+        "google/gemini-2.0-flash-exp:free",
+        context,
+    )
+    return text if text else "ANALYSIS_OFFLINE: Connectivity to Neural Core interrupted."
 
 @app.route('/api/news/analyze', methods=['POST'])
 def analyze_news_sentiment():
