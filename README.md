@@ -266,6 +266,7 @@ Below is a list of APIs used in GeoSentinel and where to obtain your API keys:
 -   📶 [OpenCellID](https://opencellid.org/) - Cell tower location data.
 -   🤗 [Hugging Face](https://huggingface.co/) - AI models and inference.
 -   🤖 [OpenRouter](https://openrouter.ai/) - Unified AI model gateway.
+-   🦈 [OrcaRouter](https://www.orcarouter.ai/) - AI model gateway with built-in zero-trust security for agents.
 -   📡 [OpenSky Network](https://opensky-network.org/) - Flight metadata and routing.
 -   🌐 [MyMemory Translation](https://mymemory.translated.net/) - Free translation services.
 -   🐦 [Twitter/X API](https://developer.twitter.com/) - Social media OSINT.
